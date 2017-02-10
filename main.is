@@ -1,0 +1,96 @@
+_sync
+  (_include "stdlib")
+  
+  (_def delay @{
+    var wrapper = function () {
+      var delay = args[0] || 1;
+      var cache = [];
+      for (var i=0; i<delay; i++) cache.push(null);
+      
+      var delayedStream = function (arg) {
+        if (arg) {
+          cache.push(arg);
+          //console.log(cache);
+          return cache.shift();
+        }
+      };
+      return delayedStream;
+    };
+    $return(wrapper());
+  }@ )
+  (_def delay-stream (_fn (n stream) (_stream (_fx (delay n)) (stream) ) ) )
+
+
+  (_def seconds @{
+    var secs = args[0] || 1;
+    setInterval(function(){$yield(1);}, secs*1000);
+  }@ )
+  
+  (_def miliseconds @{
+    var ms = args[0] || 1;
+    setInterval(function(){$yield(1);}, ms);
+  }@ )
+  
+
+  (_def attach-event @{
+      document.getElementById(args[0]).addEventListener(args[1], function (e) { $yield(e.key); });
+  }@ )
+
+
+  (_def speed-graph @{
+    var l = document.createElement('li');
+    var ht = 1;
+    if (args[2]) ht = args[2]*5; 
+    l.style.height = ""+ht+"px";
+    
+    var lst = document.getElementById(args[0]);
+    if(lst.childNodes.length === 60) lst.removeChild(lst.childNodes[0]);
+    lst.appendChild(l);
+    
+    var val = document.getElementById(args[1]);
+    val.innerHTML = ""+args[2]+" keystrokes per second";
+  }@ )
+  
+  (_def displayMax @{
+    var col = "#333";
+    if (args[1] >= 2) col = "blue";
+    if (args[1] >= 5) col = "darkgreen";
+    if (args[1] >= 8) col = "orangered";
+    document.getElementById(args[0]).innerHTML = "<b style='color:" + col + "'>" + args[1] + " keystrokes per second";
+  }@)
+
+  (_def keystrokes-viewer @{
+    var l = document.createElement('li');
+    var lst = document.getElementById(args[0]);
+    l.style.background = args[1];
+    if(lst.childNodes.length === 600) lst.removeChild(lst.childNodes[0]);
+    lst.appendChild(l);
+  }@)
+
+  (_def typeStream (_stream attach-event "typing-area" "keyup") ) 
+  (_def typeCountStream (count-stream typeStream) ) 
+ 
+  (_def msStream (_stream miliseconds 50))
+  (_def secStream (_stream seconds 1) )
+  
+  (_def secCount (_on secStream (_pull typeCountStream) ) )
+  (_def delayedSecCount (delay-stream 1 secCount) )
+  
+  (_def diff-stream (_on delayedSecCount (- (_pull secCount) (_pull delayedSecCount) ) ) )
+  
+  (_do (_on diff-stream (speed-graph "speed-viewer" "echo-area" (_pull diff-stream) ) ) )
+ 
+  (_def ksStream (_on msStream (_pull typeCountStream) ) )
+  (_def dksStream (delay-stream 1 ksStream) )
+  
+  (_def kdStream (_on dksStream (- (_pull ksStream) (_pull dksStream) ) ) )
+  (_def colStream (_on kdStream (_if (_pull kdStream) "#555" "transparent") ) )
+  (_do (_on colStream (keystrokes-viewer "keystrokes-viewer" (_pull colStream) ) ) )
+ 
+  
+  
+  (_def maxStream (max-stream diff-stream) )
+  (_do (_on maxStream (displayMax "max-area" (_pull maxStream) ) ) )
+  
+  [debug log stream on console maxStream] 
+ 

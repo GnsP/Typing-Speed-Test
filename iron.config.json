@@ -1,0 +1,9 @@
+{
+  "main": "./main.is",
+  "imports": [
+    {
+      "name": "Jquery",
+      "url": "./js/jquery.min.js"
+    }  
+  ]
+}
