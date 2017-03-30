@@ -8,7 +8,7 @@
 				text-align: center;
       }
       .container {
-        display: inline;
+        display: inline-block;
         position: relative;
         width: 100%;
         padding: 30px;
