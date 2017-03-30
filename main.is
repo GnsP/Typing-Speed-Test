@@ -10,7 +10,6 @@ _sync
       var delayedStream = function (arg) {
         if (arg) {
           cache.push(arg);
-          //console.log(cache);
           return cache.shift();
         }
       };
@@ -92,5 +91,3 @@ _sync
   (_def maxStream (max-stream diff-stream) )
   (_do (_on maxStream (displayMax "max-area" (_pull maxStream) ) ) )
   
-  [debug log stream on console maxStream] 
- 
